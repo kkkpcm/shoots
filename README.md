@@ -38,16 +38,16 @@
 
 ## 결과물
 
-- **영상**: 720×1280(9:16) `.webm`, 30fps. 유튜브 쇼츠·릴스·틱톡에 그대로 업로드 가능.
+- **영상**: 720×1280(9:16), 30fps. 브라우저가 지원하면 **`.mp4`(H.264)로 저장(인스타그램·모바일 호환)**, 미지원 시 `.webm` 폴백. 유튜브 쇼츠·릴스·틱톡에 그대로 업로드 가능.
   - 사진 Ken Burns 줌/팬, 자막 등장 애니메이션, 진행 바, 로고 워터마크, 앰버 CTA 엔드카드 포함.
 - **게시 패키지**: 제목 · 본문/설명(연락처 포함) · 해시태그(복사 버튼).
 
 ## 기술 메모
 
-- 렌더링: Canvas 2D → `canvas.captureStream(30)` → `MediaRecorder`(VP9/VP8 + opus).
+- 렌더링: Canvas 2D → `canvas.captureStream(30)` → `MediaRecorder`.
+  - 코덱 우선순위: `mp4(H.264/AAC)` → 미지원 시 `webm(VP9/VP8 + opus)`.
 - 배경음악은 `AudioContext` → `MediaStreamAudioDestinationNode`로 영상에 믹싱.
-- **권장 브라우저: 최신 Chrome.** (MediaRecorder 지원 필요)
-- `.webm`을 `.mp4`로 바꾸려면 업로드 플랫폼이 대부분 자동 변환하며, 필요 시 외부 변환 도구 사용.
+- **권장 브라우저: 최신 Chrome.** (mp4 녹화는 Chrome 최신 버전에서 지원)
 
 ## 배포
 

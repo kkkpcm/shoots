@@ -695,7 +695,9 @@ let recorder=null, recording=false;
 $('#recBtn').onclick=()=>{ if(recording) return; if(!state.scenes.length){ generate(); if(!state.scenes.length) return; } record(); };
 
 function pickMime(){
-  const c=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  // 인스타그램/모바일 호환을 위해 mp4(H.264)를 우선. 미지원 브라우저는 webm으로 폴백.
+  const c=['video/mp4;codecs=avc1.640028,mp4a.40.2','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=h264,aac','video/mp4',
+           'video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
   return c.find(m=>window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
 }
 
@@ -704,6 +706,8 @@ function record(){
   const mime=pickMime();
   if(!mime){ alert('이 브라우저는 영상 녹화(MediaRecorder)를 지원하지 않습니다. Chrome 최신 버전을 사용하세요.'); return; }
   recording=true; $('#recBtn').disabled=true; $('#playBtn').disabled=true;
+  const ext = mime.indexOf('mp4')>-1 ? 'mp4' : 'webm';
+  const blobType = mime.split(';')[0] || 'video/webm';
   statusEl.className='status rec'; statusEl.textContent='🎬 영상 만드는 중… (녹화가 끝날 때까지 탭을 유지하세요)';
   $('#result').style.display='none'; $('#dlLink').classList.add('hidden');
 
@@ -717,12 +721,12 @@ function record(){
   catch(e){ recorder=new MediaRecorder(stream); }
   recorder.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
   recorder.onstop=()=>{
-    const blob=new Blob(chunks,{type:'video/webm'});
+    const blob=new Blob(chunks,{type:blobType});
     const url=URL.createObjectURL(blob);
     const v=$('#result'); v.src=url; v.style.display='inline-block';
     const dl=$('#dlLink'); dl.href=url;
     const d=collect();
-    dl.download=`153어닝-${state.tpl}${d.area?'-'+d.area:''}.webm`;
+    dl.download=`153어닝-${state.tpl}${d.area?'-'+d.area:''}.${ext}`;
     dl.classList.remove('hidden');
     statusEl.className='status'; statusEl.textContent='✅ 완성! 아래 영상을 확인하고 저장하세요.';
     recording=false; $('#recBtn').disabled=false; $('#playBtn').disabled=false;

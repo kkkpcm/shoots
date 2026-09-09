@@ -1,0 +1,755 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>153어닝 Shoots 자동생성기 — 숏폼 영상 자동 제작 도구</title>
+<meta name="description" content="153어닝×AWNEX 숏폼(Shoots) 영상 자동 생성 도구. 사진과 정보만 넣으면 브랜드 규칙에 맞춘 대본과 세로 영상(.webm), 게시용 문구·해시태그까지 자동으로 만들어 줍니다.">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#FFFFFF; --surface:#F7F6F4; --graphite:#1C1B1A; --graphite-60:#6B6764;
+  --line:#E3E0DC; --accent:#E8530E; --accent-dark:#C4400A; --accent-soft:#FDF0E9;
+  --s1:8px; --s2:16px; --s3:24px; --s4:40px;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,'Malgun Gothic',sans-serif;
+  color:var(--graphite); background:var(--surface); line-height:1.7;
+  -webkit-font-smoothing:antialiased; letter-spacing:-.01em;
+}
+a{color:var(--accent-dark)}
+.wrap{max-width:1120px; margin:0 auto; padding:0 20px}
+header.top{background:var(--bg); border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex; align-items:center; gap:12px; padding:14px 20px}
+.logo{font-weight:800; letter-spacing:-.03em; font-size:20px; display:flex; align-items:center; gap:8px}
+.logo .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
+.logo small{font-weight:700;color:var(--graphite-60);font-size:13px;letter-spacing:0}
+.tag{margin-left:auto; font-size:13px; color:var(--graphite-60)}
+
+.hero{padding:34px 0 8px}
+.hero h1{font-size:26px; line-height:1.25; font-weight:800; letter-spacing:-.03em; margin:0 0 8px}
+.hero p{margin:0; color:var(--graphite-60); font-size:15px}
+@media(min-width:768px){ .hero h1{font-size:34px} }
+
+.grid{display:grid; grid-template-columns:1fr; gap:20px; padding:24px 0 64px}
+@media(min-width:1024px){ .grid{grid-template-columns:1fr 400px; align-items:start} }
+
+.card{background:var(--bg); border:1px solid var(--line); border-radius:16px; padding:20px}
+.card h2{font-size:18px; font-weight:700; letter-spacing:-.02em; margin:0 0 4px}
+.card h2 .step{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;
+  background:var(--accent-soft);color:var(--accent-dark);font-size:13px;font-weight:800;margin-right:8px}
+.card .hint{color:var(--graphite-60); font-size:13px; margin:0 0 16px}
+.card + .card{margin-top:20px}
+
+label.f{display:block; font-size:13px; font-weight:700; margin:14px 0 6px; color:var(--graphite)}
+input[type=text], textarea, select{
+  width:100%; border:1.5px solid var(--line); border-radius:12px; padding:12px 14px;
+  font:inherit; font-size:15px; color:var(--graphite); background:var(--bg);
+}
+textarea{min-height:76px; resize:vertical; line-height:1.6}
+input:focus, textarea:focus, select:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:transparent}
+.row{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+@media(max-width:480px){ .row{grid-template-columns:1fr} }
+
+.tpls{display:grid; grid-template-columns:repeat(2,1fr); gap:10px}
+@media(min-width:560px){ .tpls{grid-template-columns:repeat(3,1fr)} }
+.tpl{border:1.5px solid var(--line); border-radius:12px; padding:12px; cursor:pointer; background:var(--bg); text-align:left; transition:.15s}
+.tpl:hover{border-color:var(--accent)}
+.tpl.on{border-color:var(--accent); background:var(--accent-soft)}
+.tpl .em{font-size:22px}
+.tpl .nm{font-weight:700; font-size:14px; margin-top:4px}
+.tpl .ds{font-size:12px; color:var(--graphite-60); line-height:1.4; margin-top:2px}
+
+.btn{min-height:52px; padding:0 22px; border-radius:12px; font-size:16px; font-weight:700;
+  display:inline-flex; align-items:center; justify-content:center; gap:8px; cursor:pointer; border:none; width:100%}
+.btn-primary{background:var(--accent); color:#fff}
+.btn-primary:hover{background:var(--accent-dark)}
+.btn-primary:disabled{background:#d9b6a6; cursor:not-allowed}
+.btn-outline{background:transparent; color:var(--graphite); border:1.5px solid var(--line)}
+.btn-outline:hover{border-color:var(--accent)}
+.btn-sm{min-height:40px; font-size:14px; padding:0 14px; width:auto}
+
+.uploader{border:1.5px dashed var(--line); border-radius:12px; padding:18px; text-align:center; color:var(--graphite-60); cursor:pointer; background:var(--surface)}
+.uploader:hover{border-color:var(--accent); color:var(--accent-dark)}
+.thumbs{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+.thumb{position:relative; width:64px; height:64px; border-radius:10px; overflow:hidden; border:1px solid var(--line)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb .rm{position:absolute; top:2px; right:2px; background:rgba(28,27,26,.75); color:#fff; border:none; border-radius:50%; width:20px;height:20px; font-size:13px; cursor:pointer; line-height:1}
+.thumb .idx{position:absolute; bottom:2px; left:2px; background:var(--accent); color:#fff; font-size:10px; font-weight:800; border-radius:5px; padding:1px 5px}
+
+.scene{border:1px solid var(--line); border-radius:12px; padding:12px; margin-top:10px; background:var(--surface)}
+.scene .sh{display:flex; align-items:center; gap:8px; margin-bottom:8px}
+.scene .badge{font-size:11px; font-weight:800; color:var(--accent-dark); background:var(--accent-soft); border-radius:6px; padding:2px 8px}
+.scene .num{font-size:12px; color:var(--graphite-60)}
+.scene input, .scene textarea{font-size:14px; padding:8px 10px}
+.scene textarea{min-height:44px}
+.scene .lab{font-size:11px; color:var(--graphite-60); margin:8px 0 3px; font-weight:700}
+.scene select{font-size:13px; padding:8px 10px}
+
+.preview-col{position:sticky; top:16px}
+.stage{background:var(--graphite); border-radius:18px; padding:14px; text-align:center}
+canvas#stage{width:100%; max-width:280px; aspect-ratio:9/16; border-radius:12px; background:#000; display:inline-block}
+.stage .controls{display:flex; gap:8px; margin-top:12px}
+.stage .controls .btn{flex:1}
+.status{color:#fff; font-size:13px; margin-top:10px; min-height:18px; opacity:.9}
+.status.rec{color:#ffb38a}
+
+.out{margin-top:12px}
+.out label.f{margin-top:12px}
+.copybox{position:relative}
+.copybox textarea{background:var(--surface); font-size:13px}
+.copybox .cp{position:absolute; top:8px; right:8px}
+.chips{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+.chip{background:var(--accent-soft); color:var(--accent-dark); font-size:12px; font-weight:700; border-radius:999px; padding:4px 10px}
+
+.warn{background:#FFF7ED; border:1px solid #F5C99B; color:#9A4A11; border-radius:10px; padding:10px 12px; font-size:13px; margin-top:12px}
+.dl{display:block; margin-top:12px}
+video#result{width:100%; max-width:280px; border-radius:12px; margin-top:12px; display:none; background:#000}
+
+.foot{color:var(--graphite-60); font-size:12px; text-align:center; padding:24px 0 40px; line-height:1.8}
+.foot a{color:var(--graphite-60)}
+.hidden{display:none !important}
+.mini{font-size:12px;color:var(--graphite-60);margin-top:6px}
+</style>
+
+<header class="top"><div class="wrap">
+  <span class="logo"><span class="dot"></span>153어닝 <small>Shoots 자동생성기</small></span>
+  <span class="tag">숏폼 영상 · 대본 · 문구 자동 제작</span>
+</div></header>
+
+<div class="wrap">
+  <section class="hero">
+    <h1>사진만 넣으면, 숏폼 영상이 자동으로.</h1>
+    <p>153어닝×AWNEX 브랜드 규칙(3초 룰·손실회피·금지어 차단)에 맞춘 대본과 세로 영상(.webm), 게시용 문구·해시태그까지 한 번에 만듭니다.</p>
+  </section>
+
+  <div class="grid">
+    <!-- ===== 좌측: 입력 ===== -->
+    <div class="col-input">
+      <div class="card">
+        <h2><span class="step">1</span>영상 종류 고르기</h2>
+        <p class="hint">만들 숏폼의 목적을 하나 고르세요. 대본이 이 목적에 맞게 자동으로 짜입니다.</p>
+        <div class="tpls" id="tpls"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">2</span>정보 입력</h2>
+        <p class="hint">비워도 됩니다. 채운 만큼 대본이 구체적으로 나옵니다.</p>
+        <div class="row">
+          <div><label class="f">어닝 종류</label>
+            <select id="fType">
+              <option>접이식 어닝</option><option>고정식 어닝</option><option>스카이 어닝</option>
+              <option>웨이브 어닝</option><option>천갈이</option><option>AWNEX IoT 스마트 어닝</option>
+            </select>
+          </div>
+          <div><label class="f">지역</label>
+            <input type="text" id="fArea" placeholder="예: 하남, 강남, 성남"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">업종/장소</label>
+            <input type="text" id="fBiz" placeholder="예: 카페, 상가, 주택 테라스"></div>
+          <div><label class="f">영상 길이(초)</label>
+            <input type="text" id="fDur" value="20" inputmode="numeric"></div>
+        </div>
+        <label class="f">강조 포인트 <span class="mini">(쉼표로 구분, 최대 3개 사용)</span></label>
+        <input type="text" id="fPoints" placeholder="예: 태풍 자동접힘, Dickson 원단, 당일 실측">
+        <label class="f" id="lblExtra">고객 후기 / 이벤트 문구 <span class="mini">(후기·이벤트 영상일 때)</span></label>
+        <textarea id="fExtra" placeholder="예) 여름 내내 손님이 야외 테이블을 찾더라고요. 매출이 눈에 띄게 올랐어요."></textarea>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">3</span>사진 넣기 <span class="mini" style="font-weight:400">(선택 — 없으면 컬러 카드로 대체)</span></h2>
+        <p class="hint">시공 전/후, 제품, 현장 사진을 순서대로 올리세요. 장면에 위에서부터 자동 배치됩니다.</p>
+        <div class="uploader" id="drop">📷 사진 선택 / 여기로 드래그<input type="file" id="fPhotos" accept="image/*" multiple hidden></div>
+        <div class="thumbs" id="thumbs"></div>
+        <label class="f">배경음악 <span class="mini">(선택 · mp3/m4a — 저작권 확인된 파일만)</span></label>
+        <div class="uploader" id="dropBgm" style="padding:12px">🎵 음악 파일 선택<input type="file" id="fBgm" accept="audio/*" hidden></div>
+        <div class="mini" id="bgmName"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="step">4</span>대본 자동생성</h2>
+        <p class="hint">아래 버튼을 누르면 장면별 대본이 생성됩니다. 자막은 직접 수정할 수 있어요.</p>
+        <button class="btn btn-primary" id="genBtn">⚡ 대본 자동생성</button>
+        <div id="warnBox"></div>
+        <div id="scenes"></div>
+      </div>
+    </div>
+
+    <!-- ===== 우측: 미리보기/출력 ===== -->
+    <div class="preview-col">
+      <div class="card" style="padding:14px">
+        <div class="stage">
+          <canvas id="stage" width="720" height="1280"></canvas>
+          <div class="controls">
+            <button class="btn btn-outline btn-sm" id="playBtn" style="color:#fff;border-color:#555">▶ 미리보기</button>
+            <button class="btn btn-primary btn-sm" id="recBtn">🎬 영상 만들기</button>
+          </div>
+          <div class="status" id="status">대본을 먼저 생성하세요.</div>
+        </div>
+        <video id="result" controls playsinline></video>
+        <a class="dl hidden" id="dlLink" download="153어닝-shoots.webm"><button class="btn btn-primary">⬇ 영상 저장하기</button></a>
+
+        <div class="out hidden" id="outBox">
+          <label class="f">게시 제목</label>
+          <div class="copybox"><textarea id="outTitle" rows="2" readonly></textarea><button class="btn btn-outline btn-sm cp" data-cp="outTitle">복사</button></div>
+          <label class="f">본문/설명</label>
+          <div class="copybox"><textarea id="outDesc" rows="6" readonly></textarea><button class="btn btn-outline btn-sm cp" data-cp="outDesc">복사</button></div>
+          <label class="f">해시태그</label>
+          <div class="copybox"><textarea id="outTags" rows="3" readonly></textarea><button class="btn btn-outline btn-sm cp" data-cp="outTags">복사</button></div>
+          <div class="chips" id="tagChips"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    153어닝 × AWNEX · ☎ <a href="tel:01072467899">010-7246-7899</a> ·
+    <a href="https://open.kakao.com/o/sOUDqGri" target="_blank" rel="noopener">카카오 오픈챗</a> ·
+    <a href="https://blog.naver.com/153awning" target="_blank" rel="noopener">네이버 블로그</a><br>
+    영상은 브라우저 안에서 만들어지며 서버로 전송되지 않습니다. Chrome 최신 버전 권장 · 결과물은 .webm(유튜브 쇼츠·릴스 업로드 가능).
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   153어닝 Shoots 자동생성기
+   - 단일 HTML. 외부 전송 없음(사진/영상 모두 브라우저 내 처리).
+   - 대본 생성 → 스토리보드 편집 → Canvas 렌더 → MediaRecorder .webm 저장.
+   ========================================================================= */
+'use strict';
+
+const BRAND = {
+  name:'153어닝', sub:'AWNEX', accent:'#E8530E', accentDark:'#C4400A',
+  graphite:'#1C1B1A', surface:'#F7F6F4', white:'#FFFFFF',
+  phone:'010-7246-7899', kakao:'카카오 오픈챗 상담', blog:'blog.naver.com/153awning',
+  font:"'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif",
+  // 지침상 금지어 → 안전 대체
+  forbidden:[
+    [/최저가/g,'합리적인 가격'], [/무조건/g,''], [/100\s*%/g,''],
+    [/업계\s*1위/g,'차양 전문'], [/자동\s*대응\s*매장/g,''], [/업계\s*최고/g,'차양 전문']
+  ],
+  trust:['31년 차양 전문','서울·경기 500+ 시공','정부조달 등록','1년 무상 A/S']
+};
+
+/* ---------- 템플릿(영상 종류) 정의 ---------- */
+const TEMPLATES = [
+  {id:'beforeafter', em:'🔀', nm:'시공 전후', ds:'바뀐 모습으로 시선 잡기'},
+  {id:'iot',         em:'🌪️', nm:'IoT 태풍', ds:'스스로 접히는 스마트 어닝'},
+  {id:'product',     em:'☂️', nm:'제품 소개', ds:'어닝 종류·강점 소개'},
+  {id:'review',      em:'⭐', nm:'고객 후기', ds:'실제 후기로 신뢰 주기'},
+  {id:'area',        em:'📍', nm:'지역 홍보', ds:'우리 동네 어닝 전문'},
+  {id:'event',       em:'🎉', nm:'이벤트', ds:'프로모션·시즌 혜택'},
+];
+
+/* 자막(head)은 짧게(3초 룰), 라벨(label)은 앰버 칩, sub는 보조설명 */
+function buildScenes(id, d){
+  const type=d.type, area=d.area, biz=d.biz, pts=d.points, extra=d.extra;
+  const aArea = area? area+' ' : '';
+  const aBiz  = biz || '우리 매장';
+  const p = (i,fb)=> pts[i] || fb;
+  let S=[];
+  if(id==='beforeafter'){
+    S=[
+      {label:'시공 전', head:`${aBiz}, 이대로 두실 건가요?`, sub:'여름 땡볕·비 다 맞는 자리', kb:'in', photo:true},
+      {label:'시공 후', head:`${type} 하나로 이렇게`, sub:'그늘이 생기고, 쓸 수 있는 공간이 늘어요', kb:'out', photo:true},
+      {label:'왜 153', head:'31년 차양 전문의 마감', sub:`${p(0,'Dickson 원단')} · ${p(1,'국산 알루미늄')}`, kb:'in', photo:true},
+    ];
+  } else if(id==='iot'){
+    S=[
+      {label:'경고', head:'태풍에 찢어진 어닝, 보신 적 있죠?', sub:'바람에 버티다 프레임까지 상합니다', kb:'in', photo:true},
+      {label:'AWNEX IoT', head:'바람이 세지면 스스로 접혀요', sub:'풍속 감지 → 자동 수납으로 어닝을 지킵니다', kb:'out', photo:true},
+      {label:'스마트', head:'앱으로 켜고, 예약까지', sub:`${p(0,'외출 중에도 원격 제어')}`, kb:'in', photo:true},
+    ];
+  } else if(id==='product'){
+    S=[
+      {label:type, head:`${type}, 뭐가 다를까?`, sub:`${aBiz}에 맞는 차양 솔루션`, kb:'in', photo:true},
+      {label:'강점', head:p(0,'튼튼한 국산 프레임'), sub:p(1,'변색에 강한 고급 원단'), kb:'out', photo:true},
+      {label:'강점', head:p(2,'현장 맞춤 제작·시공'), sub:'치수부터 색상까지 우리 매장에 딱 맞게', kb:'in', photo:true},
+    ];
+  } else if(id==='review'){
+    const q = (extra||'설치하고 나서 손님이 야외 자리를 먼저 찾아요.').trim();
+    S=[
+      {label:'실제 후기', head:`${aArea}${aBiz} 사장님 후기`, sub:'★★★★★ 실제 시공 고객', kb:'in', photo:true},
+      {label:'후기', head:`“${q.length>34?q.slice(0,33)+'…':q}”`, sub:`${type} 시공`, kb:'out', photo:true, quote:true},
+      {label:'신뢰', head:'서울·경기 500+ 시공', sub:'31년 차양 전문 · 1년 무상 A/S', kb:'in', photo:true},
+    ];
+  } else if(id==='area'){
+    S=[
+      {label:aArea?area:'우리 동네', head:`${aArea}어닝 설치, 어디 맡기지?`, sub:`${aBiz}까지 직접 찾아갑니다`, kb:'in', photo:true},
+      {label:'빠른 견적', head:'사진 한 장이면 30분 견적', sub:`${p(0,'당일 실측 · 깔끔한 시공')}`, kb:'out', photo:true},
+      {label:'왜 153', head:'31년 · 500+ 시공의 안심', sub:`${p(1,'정부조달 등록 · 1년 무상 A/S')}`, kb:'in', photo:true},
+    ];
+  } else if(id==='event'){
+    const ev=(extra||'이번 달 상담 고객 특별 혜택').trim();
+    S=[
+      {label:'EVENT', head:ev.length>28?ev.slice(0,27)+'…':ev, sub:`${type} 상담 시`, kb:'in', photo:true},
+      {label:'혜택', head:p(0,'지금 상담하면 더 좋은 조건'), sub:p(1,'서두르면 이번 시즌 안에 시공'), kb:'out', photo:true},
+    ];
+  }
+  // 공통 CTA 장면(항상 마지막)
+  S.push({cta:true, label:`${BRAND.name} × ${BRAND.sub}`,
+    head:'사진 한 장 보내면\n30분 안에 견적',
+    sub:'', kb:'none', photo:false});
+  return S;
+}
+
+/* 게시용 문구/해시태그 */
+function buildCopy(id, d, scenes){
+  const type=d.type, area=d.area, biz=d.biz;
+  const titles={
+    beforeafter:`${area?area+' ':''}${biz||'매장'} ${type} 시공 전후 (실제 현장)`,
+    iot:`태풍에도 안전한 AWNEX IoT 스마트 어닝, 스스로 접힙니다`,
+    product:`${type}, 이래서 다릅니다 | 153어닝`,
+    review:`${area?area+' ':''}${biz||'사장님'} ${type} 후기 ★★★★★`,
+    area:`${area||'우리 동네'} 어닝 설치는 153어닝 | 30분 사진견적`,
+    event:`${(d.extra||'이번 시즌 어닝 상담 혜택').trim()} | 153어닝`,
+  };
+  const descLines=[
+    titles[id],
+    '',
+    `· ${type} 전문 시공 (${BRAND.trust[0]})`,
+    `· ${BRAND.trust[1]} · ${BRAND.trust[2]} · ${BRAND.trust[3]}`,
+    area?`· ${area} 지역 당일 실측 가능`:'· 서울·경기 당일 실측 가능',
+    '',
+    '📷 사진 한 장 보내주시면 30분 안에 예상 견적을 보내드립니다.',
+    `☎ ${BRAND.phone}`,
+    `💬 ${BRAND.kakao}`,
+    `📝 ${BRAND.blog}`,
+  ];
+  // 해시태그: 기본 + 종류 + 지역
+  const typeTag = type.replace(/\s/g,'');
+  const base=['153어닝','어닝','차양','차양막','어닝설치','어닝시공','AWNEX','스마트어닝'];
+  const perTemplate={
+    beforeafter:['시공전후','비포애프터'], iot:['IoT어닝','태풍대비','스마트홈'],
+    product:['어닝추천','매장인테리어'], review:['고객후기','시공후기'],
+    area:['동네어닝'], event:['어닝이벤트','어닝할인']
+  };
+  const bizTag = biz? [biz.replace(/\s/g,'')+'어닝'] : [];
+  const areaTag = area? [area.replace(/\s/g,'')+'어닝', area.replace(/\s/g,'')+'차양'] : [];
+  let tags=[...base, typeTag, ...(perTemplate[id]||[]), ...bizTag, ...areaTag];
+  tags=[...new Set(tags)].filter(Boolean).slice(0,15).map(t=>'#'+t);
+  return {title:titles[id], desc:descLines.join('\n'), tags};
+}
+
+/* 금지어 정리 + 경고 수집 */
+function sanitize(text){
+  let hits=[]; let out=text;
+  for(const [re,rep] of BRAND.forbidden){
+    if(re.test(out)){ hits.push(out.match(re)[0]); out=out.replace(re,rep); }
+  }
+  out=out.replace(/\s{2,}/g,' ').trim();
+  return {out, hits};
+}
+
+/* =========================== 상태 =========================== */
+const state = {
+  tpl:'beforeafter',
+  photos:[],        // {img:Image, url}
+  bgmBuffer:null, bgmName:'',
+  scenes:[],        // 편집된 장면 {label,head,sub,kb,cta,quote,photoIndex}
+  copy:null,
+};
+
+/* =========================== DOM =========================== */
+const $=s=>document.querySelector(s);
+const tplsEl=$('#tpls'), scenesEl=$('#scenes'), thumbsEl=$('#thumbs');
+const canvas=$('#stage'), ctx=canvas.getContext('2d');
+const statusEl=$('#status');
+
+/* 템플릿 카드 렌더 */
+function renderTpls(){
+  tplsEl.innerHTML='';
+  TEMPLATES.forEach(t=>{
+    const b=document.createElement('button');
+    b.className='tpl'+(t.id===state.tpl?' on':'');
+    b.innerHTML=`<div class="em">${t.em}</div><div class="nm">${t.nm}</div><div class="ds">${t.ds}</div>`;
+    b.onclick=()=>{ state.tpl=t.id; renderTpls(); };
+    tplsEl.appendChild(b);
+  });
+}
+renderTpls();
+
+/* 입력값 수집 */
+function collect(){
+  const points=($('#fPoints').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  return {
+    type:$('#fType').value.trim(),
+    area:$('#fArea').value.trim(),
+    biz:$('#fBiz').value.trim(),
+    dur:Math.max(8, Math.min(45, parseInt($('#fDur').value,10)||20)),
+    points, extra:$('#fExtra').value.trim(),
+  };
+}
+
+/* ---------- 사진 업로드 ---------- */
+const drop=$('#drop'), fPhotos=$('#fPhotos');
+drop.onclick=()=>fPhotos.click();
+;['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.style.borderColor=BRAND.accent;}));
+;['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.style.borderColor='';}));
+drop.addEventListener('drop',ev=>{ if(ev.dataTransfer.files) addPhotos(ev.dataTransfer.files); });
+fPhotos.onchange=()=>addPhotos(fPhotos.files);
+
+function addPhotos(files){
+  [...files].filter(f=>f.type.startsWith('image/')).forEach(f=>{
+    const url=URL.createObjectURL(f); const img=new Image();
+    img.onload=()=>{ state.photos.push({img,url}); renderThumbs(); refreshSceneSelectors(); };
+    img.src=url;
+  });
+  fPhotos.value='';
+}
+function renderThumbs(){
+  thumbsEl.innerHTML='';
+  state.photos.forEach((p,i)=>{
+    const d=document.createElement('div'); d.className='thumb';
+    d.innerHTML=`<img src="${p.url}" alt=""><span class="idx">${i+1}</span><button class="rm" title="삭제">×</button>`;
+    d.querySelector('.rm').onclick=()=>{ URL.revokeObjectURL(p.url); state.photos.splice(i,1); renderThumbs(); refreshSceneSelectors(); };
+    thumbsEl.appendChild(d);
+  });
+}
+
+/* ---------- BGM 업로드 ---------- */
+const dropBgm=$('#dropBgm'), fBgm=$('#fBgm');
+dropBgm.onclick=()=>fBgm.click();
+fBgm.onchange=async()=>{
+  const f=fBgm.files[0]; if(!f) return;
+  state.bgmName=f.name; $('#bgmName').textContent='🎵 '+f.name+' (녹화 시 함께 입혀집니다)';
+  try{
+    const ac=new (window.AudioContext||window.webkitAudioContext)();
+    const buf=await f.arrayBuffer();
+    state.bgmBuffer=await ac.decodeAudioData(buf); ac.close();
+  }catch(e){ state.bgmBuffer=null; $('#bgmName').textContent='⚠ 이 음악 파일은 사용할 수 없습니다. 다른 파일을 시도하세요.'; }
+};
+
+/* =========================== 대본 생성 =========================== */
+$('#genBtn').onclick=generate;
+function generate(){
+  const d=collect();
+  let scenes=buildScenes(state.tpl, d);
+  // 금지어 정리 + 사진 자동배치
+  let allHits=[]; let pIdx=0;
+  scenes.forEach(s=>{
+    const h1=sanitize(s.head); s.head=h1.out; allHits.push(...h1.hits);
+    const h2=sanitize(s.sub||''); s.sub=h2.out; allHits.push(...h2.hits);
+    s.photoIndex = s.photo ? (pIdx++) : -1;   // 사진 장면에 위에서부터 배치
+  });
+  state.scenes=scenes;
+  state.copy=buildCopy(state.tpl, d, scenes);
+  renderScenes(d);
+  renderOut();
+  // 경고
+  const wb=$('#warnBox'); wb.innerHTML='';
+  allHits=[...new Set(allHits.filter(Boolean))];
+  if(allHits.length){
+    wb.innerHTML=`<div class="warn">⚠ 금지어를 자동으로 순화했습니다: <b>${allHits.join(', ')}</b> — 최저가/무조건/100%/업계1위 등은 브랜드 규칙상 사용하지 않습니다.</div>`;
+  }
+  statusEl.textContent='대본 완성 · ▶ 미리보기 또는 🎬 영상 만들기';
+  drawFrame(0); // 첫 프레임 표시
+  $('#recBtn').focus();
+}
+
+/* 장면 편집 UI */
+function sceneOptions(sel){
+  let o='<option value="-1">사진 없음(컬러 카드)</option>';
+  state.photos.forEach((p,i)=> o+=`<option value="${i}" ${i===sel?'selected':''}>사진 ${i+1}</option>`);
+  return o;
+}
+function renderScenes(d){
+  scenesEl.innerHTML='';
+  const total=d.dur, weights=state.scenes.map(s=> s.cta?1.1 : (s===state.scenes[0]?1.25:1));
+  const wsum=weights.reduce((a,b)=>a+b,0);
+  state.scenes.forEach((s,i)=>{
+    s.dur = +(total*weights[i]/wsum).toFixed(2);
+    const div=document.createElement('div'); div.className='scene';
+    div.innerHTML=`
+      <div class="sh"><span class="badge">${s.cta?'CTA':'장면 '+(i+1)}</span>
+        <span class="num">${s.dur}s · ${s.label||''}</span></div>
+      <div class="lab">앰버 라벨</div><input type="text" data-k="label" value="${escAttr(s.label||'')}">
+      <div class="lab">메인 자막</div><textarea data-k="head">${escHtml(s.head||'')}</textarea>
+      <div class="lab">보조 자막</div><input type="text" data-k="sub" value="${escAttr(s.sub||'')}">
+      ${s.cta?'':`<div class="lab">배경 사진</div><select data-k="photoIndex">${sceneOptions(s.photoIndex)}</select>`}
+    `;
+    div.querySelectorAll('[data-k]').forEach(inp=>{
+      inp.oninput=()=>{
+        const k=inp.dataset.k;
+        s[k]= k==='photoIndex'? parseInt(inp.value,10) : inp.value;
+        drawFrame(0);
+      };
+    });
+    scenesEl.appendChild(div);
+  });
+}
+function refreshSceneSelectors(){
+  if(state.scenes.length) scenesEl.querySelectorAll('select[data-k="photoIndex"]').forEach((sel,n)=>{
+    // 재구성: photo 장면 순서대로
+  });
+  // 간단히 전체 재렌더
+  if(state.scenes.length) renderScenes(collect());
+}
+function escHtml(s){return (s+'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){return escHtml(s).replace(/"/g,'&quot;');}
+
+/* 출력 문구 렌더 */
+function renderOut(){
+  if(!state.copy) return;
+  $('#outBox').classList.remove('hidden');
+  $('#outTitle').value=state.copy.title;
+  $('#outDesc').value=state.copy.desc;
+  $('#outTags').value=state.copy.tags.join(' ');
+  const chips=$('#tagChips'); chips.innerHTML='';
+  state.copy.tags.forEach(t=>{ const s=document.createElement('span'); s.className='chip'; s.textContent=t; chips.appendChild(s); });
+}
+document.querySelectorAll('.cp').forEach(b=>b.onclick=async()=>{
+  const el=$('#'+b.dataset.cp);
+  try{ await navigator.clipboard.writeText(el.value); const t=b.textContent; b.textContent='복사됨✓'; setTimeout(()=>b.textContent=t,1200);}catch(e){ el.select(); document.execCommand('copy'); }
+});
+
+/* =========================== 렌더링(Canvas) =========================== */
+const W=720, H=1280;
+function timeline(){ // 누적 시작시각 배열
+  let acc=0; return state.scenes.map(s=>{ const seg={start:acc,end:acc+s.dur,s}; acc+=s.dur; return seg; });
+}
+function totalDur(){ return state.scenes.reduce((a,s)=>a+(s.dur||0),0); }
+
+function drawCover(img, scale, px, py){
+  const ir=img.width/img.height, cr=W/H;
+  let dw,dh; if(ir>cr){ dh=H*scale; dw=dh*ir; } else { dw=W*scale; dh=dw/ir; }
+  const x=(W-dw)/2 + px*(dw-W)/2*-1, y=(H-dh)/2 + py*(dh-H)/2*-1;
+  ctx.drawImage(img, x, y, dw, dh);
+}
+
+function roundRect(x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
+
+function wrap(text, font, maxW){
+  ctx.font=font; const words=(text||'').split(/(\s+)/); let lines=[], cur='';
+  for(const w of words){
+    if(w==='\n'){ lines.push(cur); cur=''; continue; }
+    const test=cur+w;
+    if(ctx.measureText(test).width>maxW && cur){ lines.push(cur.trimEnd()); cur=w.trimStart(); }
+    else cur=test;
+    // 아주 긴 단어(공백없는 한글) 강제 분할
+    while(ctx.measureText(cur).width>maxW && cur.length>1){
+      let n=cur.length; while(n>1 && ctx.measureText(cur.slice(0,n)).width>maxW) n--;
+      lines.push(cur.slice(0,n)); cur=cur.slice(n);
+    }
+  }
+  if(cur.trim()!=='' || lines.length===0) lines.push(cur.trimEnd());
+  // 명시적 \n 처리
+  return lines.flatMap(l=>l.split('\n'));
+}
+
+function drawTextBlock(lines, x, y, font, lh, color, align){
+  ctx.font=font; ctx.textAlign=align||'left'; ctx.textBaseline='alphabetic'; ctx.fillStyle=color;
+  lines.forEach((l,i)=> ctx.fillText(l, x, y+i*lh));
+}
+
+// 진입 애니메이션 계수(장면 로컬 t 0..1)
+function easeOut(t){ return 1-Math.pow(1-t,3); }
+
+function drawScene(seg, lt){ // lt: 0..1 within scene
+  const s=seg.s;
+  ctx.clearRect(0,0,W,H);
+  const appear=easeOut(Math.min(1, lt/0.18)); // 첫 18% 동안 등장
+
+  if(s.cta){
+    // 앰버 CTA 카드
+    ctx.fillStyle=BRAND.accent; ctx.fillRect(0,0,W,H);
+    // 미세한 대각 하이라이트
+    ctx.fillStyle='rgba(255,255,255,0.06)';
+    ctx.beginPath(); ctx.moveTo(0,H*0.62); ctx.lineTo(W,H*0.42); ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.fill();
+    const cx=W/2, ty=1-appear;
+    // 로고 칩
+    ctx.save(); ctx.translate(0, ty*30);
+    ctx.textAlign='center';
+    ctx.font=`800 34px ${BRAND.font}`; ctx.fillStyle='#fff';
+    ctx.fillText(`${BRAND.name}  ×  ${BRAND.sub}`, cx, 300);
+    // 메인 카피
+    const hl=wrap(s.head||'', `800 66px ${BRAND.font}`, W-140);
+    drawTextBlock(hl, cx, 470, `800 66px ${BRAND.font}`, 82, '#fff','center');
+    // 구분선
+    ctx.strokeStyle='rgba(255,255,255,.5)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx-90,650); ctx.lineTo(cx+90,650); ctx.stroke();
+    // 전화
+    ctx.font=`800 40px ${BRAND.font}`; ctx.fillStyle='#fff';
+    ctx.fillText('📷 사진 한 장이면 30분 견적', cx, 760);
+    ctx.font=`800 78px ${BRAND.font}`;
+    ctx.fillText('☎ '+BRAND.phone, cx, 890);
+    ctx.font=`600 34px ${BRAND.font}`; ctx.fillStyle='rgba(255,255,255,.92)';
+    ctx.fillText(BRAND.kakao, cx, 970);
+    ctx.font=`500 30px ${BRAND.font}`; ctx.fillStyle='rgba(255,255,255,.85)';
+    ctx.fillText('📝 '+BRAND.blog, cx, 1030);
+    ctx.restore();
+    return;
+  }
+
+  // 배경: 사진 or 컬러카드
+  const ph = s.photoIndex>=0 ? state.photos[s.photoIndex] : null;
+  if(ph){
+    const kbT=lt; // ken burns
+    const sc = s.kb==='out' ? (1.12 - 0.10*kbT) : (1.02 + 0.10*kbT);
+    const pan = s.kb==='out' ? -0.3+0.6*kbT : 0.3-0.6*kbT;
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+    drawCover(ph.img, Math.max(1,sc), pan*0.4, pan);
+    // 하단 가독성 그라디언트
+    const g=ctx.createLinearGradient(0,H*0.45,0,H);
+    g.addColorStop(0,'rgba(20,19,18,0)'); g.addColorStop(1,'rgba(20,19,18,0.86)');
+    ctx.fillStyle=g; ctx.fillRect(0,H*0.45,W,H*0.55);
+    // 상단도 살짝
+    const g2=ctx.createLinearGradient(0,0,0,H*0.22);
+    g2.addColorStop(0,'rgba(20,19,18,0.5)'); g2.addColorStop(1,'rgba(20,19,18,0)');
+    ctx.fillStyle=g2; ctx.fillRect(0,0,W,H*0.22);
+  } else {
+    // 컬러 카드(사진 없을 때) — 그래파이트 배경 + 앰버 포인트
+    ctx.fillStyle=BRAND.graphite; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='rgba(232,83,14,0.14)';
+    ctx.beginPath(); ctx.arc(W*0.85, H*0.2, 260,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,0.04)';
+    ctx.beginPath(); ctx.arc(W*0.1, H*0.8, 200,0,Math.PI*2); ctx.fill();
+  }
+
+  // 상단 로고 칩
+  ctx.save();
+  ctx.font=`800 30px ${BRAND.font}`; ctx.textBaseline='middle';
+  const chipTxt=BRAND.name; const cw=ctx.measureText(chipTxt).width;
+  ctx.fillStyle='rgba(20,19,18,.55)'; roundRect(40,48,cw+78,58,29); ctx.fill();
+  ctx.fillStyle=BRAND.accent; ctx.beginPath(); ctx.arc(78,77,10,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.fillText(chipTxt, 100, 78);
+  ctx.restore();
+
+  // 진행 바(전체 영상 기준)
+  const prog=(seg.start+lt*s.dur)/Math.max(0.01,totalDur());
+  ctx.fillStyle='rgba(255,255,255,.25)'; ctx.fillRect(0,0,W,8);
+  ctx.fillStyle=BRAND.accent; ctx.fillRect(0,0,W*prog,8);
+
+  // 텍스트 블록(하단) — 등장 애니메이션
+  const slide=(1-appear)*44;
+  ctx.save(); ctx.globalAlpha=appear; ctx.translate(0, slide);
+  const baseY = s.sub? 980 : 1040;
+  // 앰버 라벨 칩
+  if(s.label){
+    ctx.font=`800 30px ${BRAND.font}`; ctx.textBaseline='middle';
+    const lw=ctx.measureText(s.label).width;
+    ctx.fillStyle=BRAND.accent; roundRect(56, baseY-58, lw+44, 52, 12); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.textAlign='left'; ctx.fillText(s.label, 78, baseY-31);
+  }
+  // 메인 자막
+  const headFont=`800 ${s.quote?54:60}px ${BRAND.font}`;
+  const hlines=wrap(s.head||'', headFont, W-112);
+  // 그림자
+  ctx.shadowColor='rgba(0,0,0,.55)'; ctx.shadowBlur=12; ctx.shadowOffsetY=2;
+  drawTextBlock(hlines, 56, baseY+64, headFont, s.quote?68:74, '#fff','left');
+  ctx.shadowColor='transparent';
+  // 보조 자막
+  if(s.sub){
+    const subY=baseY+64+hlines.length*(s.quote?68:74)+6;
+    const sfont=`500 34px ${BRAND.font}`;
+    const slines=wrap(s.sub, sfont, W-112);
+    drawTextBlock(slines, 56, subY, sfont, 46, 'rgba(255,255,255,.92)','left');
+  }
+  ctx.restore();
+}
+
+/* 특정 절대시각(초) 프레임 */
+function drawFrame(t){
+  if(!state.scenes.length){ ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#666'; ctx.textAlign='center'; ctx.font=`600 34px ${BRAND.font}`;
+    ctx.fillText('대본을 생성하면', W/2, H/2-20); ctx.fillText('여기에 미리보기가 나옵니다', W/2, H/2+30); return; }
+  const tl=timeline(); const T=totalDur(); t=Math.max(0,Math.min(T-0.001,t));
+  const seg=tl.find(s=> t>=s.start && t<s.end) || tl[tl.length-1];
+  drawScene(seg, (t-seg.start)/Math.max(0.01,seg.s.dur));
+}
+
+/* =========================== 미리보기 재생 =========================== */
+let playing=false, rafId=null, previewAudio=null, previewCtx=null;
+$('#playBtn').onclick=()=>{ if(playing){ stopPreview(); } else { startPreview(); } };
+function startPreview(){
+  if(!state.scenes.length){ generate(); if(!state.scenes.length) return; }
+  playing=true; $('#playBtn').textContent='⏸ 정지'; statusEl.textContent='미리보기 재생 중…';
+  playAudio(false);
+  const T=totalDur(), t0=performance.now();
+  const loop=()=>{ if(!playing) return;
+    const t=(performance.now()-t0)/1000;
+    if(t>=T){ drawFrame(T-0.01); stopPreview(); return; }
+    drawFrame(t); rafId=requestAnimationFrame(loop);
+  };
+  loop();
+}
+function stopPreview(){ playing=false; $('#playBtn').textContent='▶ 미리보기'; cancelAnimationFrame(rafId);
+  if(previewAudio){ try{previewAudio.stop();}catch(e){} previewAudio=null; }
+  if(previewCtx){ try{previewCtx.close();}catch(e){} previewCtx=null; }
+  if(statusEl.textContent.includes('미리보기')) statusEl.textContent='정지됨';
+}
+function playAudio(forStream){
+  if(!state.bgmBuffer) return null;
+  const AC=window.AudioContext||window.webkitAudioContext;
+  const ac=new AC(); const src=ac.createBufferSource(); src.buffer=state.bgmBuffer;
+  const g=ac.createGain(); g.gain.value=0.55; src.connect(g);
+  if(forStream){ const dest=ac.createMediaStreamDestination(); g.connect(dest); src.start(); return {ac,src,dest}; }
+  g.connect(ac.destination); src.start(); previewCtx=ac; previewAudio=src; return null;
+}
+
+/* =========================== 녹화(MediaRecorder) =========================== */
+let recorder=null, recording=false;
+$('#recBtn').onclick=()=>{ if(recording) return; if(!state.scenes.length){ generate(); if(!state.scenes.length) return; } record(); };
+
+function pickMime(){
+  // 인스타그램/모바일 호환을 위해 mp4(H.264)를 우선. 미지원 브라우저는 webm으로 폴백.
+  const c=['video/mp4;codecs=avc1.640028,mp4a.40.2','video/mp4;codecs=avc1.42E01E,mp4a.40.2','video/mp4;codecs=h264,aac','video/mp4',
+           'video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'];
+  return c.find(m=>window.MediaRecorder && MediaRecorder.isTypeSupported(m)) || '';
+}
+
+function record(){
+  stopPreview();
+  const mime=pickMime();
+  if(!mime){ alert('이 브라우저는 영상 녹화(MediaRecorder)를 지원하지 않습니다. Chrome 최신 버전을 사용하세요.'); return; }
+  recording=true; $('#recBtn').disabled=true; $('#playBtn').disabled=true;
+  const ext = mime.indexOf('mp4')>-1 ? 'mp4' : 'webm';
+  const blobType = mime.split(';')[0] || 'video/webm';
+  statusEl.className='status rec'; statusEl.textContent='🎬 영상 만드는 중… (녹화가 끝날 때까지 탭을 유지하세요)';
+  $('#result').style.display='none'; $('#dlLink').classList.add('hidden');
+
+  const fps=30;
+  const stream=canvas.captureStream(fps);
+  let audio=null;
+  if(state.bgmBuffer){ audio=playAudio(true); if(audio) audio.dest.stream.getAudioTracks().forEach(tr=>stream.addTrack(tr)); }
+
+  const chunks=[];
+  try{ recorder=new MediaRecorder(stream, {mimeType:mime, videoBitsPerSecond:6_000_000}); }
+  catch(e){ recorder=new MediaRecorder(stream); }
+  recorder.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  recorder.onstop=()=>{
+    const blob=new Blob(chunks,{type:blobType});
+    const url=URL.createObjectURL(blob);
+    const v=$('#result'); v.src=url; v.style.display='inline-block';
+    const dl=$('#dlLink'); dl.href=url;
+    const d=collect();
+    dl.download=`153어닝-${state.tpl}${d.area?'-'+d.area:''}.${ext}`;
+    dl.classList.remove('hidden');
+    statusEl.className='status'; statusEl.textContent='✅ 완성! 아래 영상을 확인하고 저장하세요.';
+    recording=false; $('#recBtn').disabled=false; $('#playBtn').disabled=false;
+    if(audio){ try{audio.src.stop();}catch(e){} try{audio.ac.close();}catch(e){} }
+    stream.getTracks().forEach(t=>t.stop());
+  };
+
+  const T=totalDur(), t0=performance.now();
+  recorder.start();
+  const loop=()=>{
+    const t=(performance.now()-t0)/1000;
+    if(t>=T){ drawFrame(T-0.01); setTimeout(()=>{ if(recorder&&recorder.state!=='inactive') recorder.stop(); }, 120); return; }
+    drawFrame(t);
+    const pct=Math.round(t/T*100);
+    statusEl.textContent=`🎬 영상 만드는 중… ${pct}%`;
+    requestAnimationFrame(loop);
+  };
+  loop();
+}
+
+/* 초기 프레임 */
+drawFrame(0);
+
+/* 후기/이벤트 템플릿 안내 라벨 토글 */
+$('#fType') && null;
+</script>
